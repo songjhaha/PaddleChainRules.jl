@@ -58,7 +58,7 @@ function vjp(stateless_module::PaddleStatelessModule, pyparams::Vector, pyargs..
     return res, vjp_func
 end
 
-function vjp_wrt_params(stateless_module::PaddleStatelessModule, pyparams::Vector, pyargs...; kwargs...) # grad wrt params and args
+function vjp_wrt_params(stateless_module::PaddleStatelessModule, pyparams::Vector, pyargs...; kwargs...) # grad wrt params
     res = stateless_module(pyparams, pyargs...; kwargs...)
     function vjp_func(Δ)
         # compute the grad of params
