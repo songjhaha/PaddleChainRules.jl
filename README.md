@@ -2,8 +2,9 @@
 
 The idea is from [PyCallChainRules.jl](https://github.com/rejuvyesh/PyCallChainRules.jl)
 
-a small demo of wrapping a full cennected Dense network of [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) in julia, and make it differentiable by `ChainRulesCore.rrule`.
+a small demo package of wrapping a full cennected Dense network of [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) in julia, and make it differentiable by `ChainRulesCore.rrule`.
 
+## Example
 ```julia
 #install paddlepaddle
 using PyCall
@@ -44,6 +45,7 @@ And there is a [demo](examples/demo_neuralpde.jl) for neuralPDE.
 ## TODO
 - In the demo of neuralPDE, this package is much slower than [PyCallChainRules.jl](https://github.com/rejuvyesh/PyCallChainRules.jl) and Flux.jl, need to imporve the speed.
 - Now only the Dense network is supported, more genneral network structure?
+- test code. compare output of forwrad and backward to the result from paddle's api
 - Some benchmarks:
     + forward and backward
     + possion equation with NeuralPDE, compared with PyCallChainRules, Flux and [PaddleScience](https://github.com/PaddlePaddle/PaddleScience)
