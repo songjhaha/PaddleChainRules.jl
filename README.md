@@ -46,6 +46,7 @@ And there is a [demo](examples/demo_neuralpde.jl) for neuralPDE.
 - In the demo of neuralPDE, this package is much slower than [PyCallChainRules.jl](https://github.com/rejuvyesh/PyCallChainRules.jl) and Flux.jl, need to imporve the speed.
 - Now only the Dense network is supported, more genneral network structure?
 - test code. compare output of forwrad and backward to the result from paddle's api
+- GPU support.
 - Some benchmarks:
     + forward and backward
     + possion equation with NeuralPDE, compared with PyCallChainRules, Flux and [PaddleScience](https://github.com/PaddlePaddle/PaddleScience)
