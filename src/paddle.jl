@@ -20,10 +20,10 @@ pyfrom_dlpack(x) = @pycall dlpack.from_dlpack(x)::PyObject
 include("FCNet.jl") 
 
 
-struct PaddleModuleWrapper{T}
+struct PaddleModuleWrapper
     NN::PaddleStatelessModule
     dtype::Type
-    params::Vector{T}
+    params::Vector
 end
 
 Base.show(io::IO, f::PaddleModuleWrapper) = print(io, f.NN, " ", f.dtype)
@@ -36,7 +36,7 @@ function PaddleModuleWrapper(paddle_module)
     params = paddle_module.parameters()
     jlparams = map(x->DLPack.wrap(x, pyto_dlpack), params)
     dtype = eltype(jlparams[1])
-    return PaddleModuleWrapper{Array{dtype, N} where N}(PaddleStatelessModule(paddle_module), dtype, jlparams)
+    return PaddleModuleWrapper(PaddleStatelessModule(paddle_module), dtype, jlparams)
 end
 
 @functor PaddleModuleWrapper (params,)

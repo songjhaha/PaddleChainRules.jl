@@ -21,7 +21,11 @@ fmap(f, x::ChainRulesCore.Tangent) = fmap(f, x.backing)
 
 include("paddle.jl")
 
-
+function __init__()
+    @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
+        include("cuda.jl")
+    end    
+end
 
 
 end # module
