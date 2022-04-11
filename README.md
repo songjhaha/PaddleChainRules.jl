@@ -40,7 +40,8 @@ grad, = Zygote.gradient(m->loss(m, input, target), jlwrap)
 # grad of input
 grad, = Zygote.gradient(x->loss(jlwrap, x, target), input)
 ```
-###GPU
+
+### GPU
 ```julia
 #install paddlepaddle-gpu
 using PyCall
