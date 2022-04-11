@@ -45,7 +45,6 @@ function compare_grad_wrt_inputs(model, modelwrap, inputs)
     @test isapprox(sum(paddlegrad), sum(grad))
 end
 
-
 batchsize = 1
 indim = 3
 outdim = 2
@@ -59,7 +58,7 @@ hiddendim = 4
     )
     mlpwrap = PaddleModuleWrapper(mlp)
     if CUDA.functional()
-        linwrap = fmap(CUDA.cu, linwrap)
+        mlpwrap = fmap(CUDA.cu, mlpwrap)
     end    
     x = randn(Float32, indim, batchsize)
     if CUDA.functional()
@@ -69,5 +68,4 @@ hiddendim = 4
     @test size(y) == (outdim, batchsize)
     compare_grad_wrt_params(mlp, mlpwrap, x)
     compare_grad_wrt_inputs(mlp, mlpwrap, x)
-
 end
