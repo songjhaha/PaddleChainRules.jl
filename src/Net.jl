@@ -1,6 +1,16 @@
 abstract type PaddleStatelessModule end
 abstract type PaddleStatelessLayer end
 
+struct PaddleStatelessGeneralNet<:PaddleStatelessModule
+    NN::PyObject
+end
+
+function (stateless_module::PaddleStatelessGeneralNet)(params::Vector, inputs; kwinputs...)
+    map((p,p_new)->p.set_value(p_new), stateless_module.NN.parameters(), params)
+    out = stateless_module.NN(inputs)
+    return out
+end
+
 struct PaddleStatelessFCNet<:PaddleStatelessModule
     layers::Vector{PaddleStatelessLayer}
 end
