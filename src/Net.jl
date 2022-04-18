@@ -26,17 +26,21 @@ function (stateless_module::PaddleStatelessFCNet)(params::Vector, inputs; kwinpu
 end
 
 function PaddleStatelessModule(paddle_module)
-    pybuiltin("isinstance")(paddle_module, paddle.nn.Sequential) || error("Not a paddle.nn.Sequential")
-    layers = PaddleStatelessLayer[]
-    for layer in paddle_module
-        if pybuiltin("isinstance")(layer, paddle.nn.Linear)
-            push!(layers, PaddleLinear(layer.weight.shape...))
-        else 
-            push!(layers, PaddleActivation(layer))
+    if pybuiltin("isinstance")(paddle_module, paddle.nn.Sequential)
+        layers = PaddleStatelessLayer[]
+        for layer in paddle_module
+            if pybuiltin("isinstance")(layer, paddle.nn.Linear)
+                push!(layers, PaddleLinear(layer.weight.shape...))
+            else 
+                push!(layers, PaddleActivation(layer))
+            end
         end
+        paddel_fc_net = PaddleStatelessFCNet(layers)
+        return paddel_fc_net
+    else
+        paddle_net = PaddleStatelessGeneralNet(paddle_module)
+        return paddle_net
     end
-    paddel_fc_net = PaddleStatelessFCNet(layers)
-    return paddel_fc_net
 end
 
 # wrap paddle's layer
