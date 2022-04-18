@@ -17,7 +17,7 @@ pyto_dlpack(x) = @pycall dlpack.to_dlpack(x)::PyObject
 pyfrom_dlpack(x) = @pycall dlpack.from_dlpack(x)::PyObject
 
 # now only support full connected network
-include("FCNet.jl") 
+include("Net.jl") 
 
 
 struct PaddleModuleWrapper
@@ -53,6 +53,17 @@ function vjp(stateless_module::PaddleStatelessModule, pyparams::Vector, pyargs..
     function vjp_func(Δ)
         # compute the grad of both params and args? will it cost more during training?
         grad = paddle.fluid.dygraph.grad(res, vcat(pyparams, pyargs...), Δ, retain_graph=true)
+        return (grad[1:paramslen], grad[paramslen+1:end])
+    end
+    return res, vjp_func
+end
+
+function vjp(stateless_module::PaddleStatelessGeneralNet, pyparams::Vector, pyargs...; kwargs...) # grad wrt params and args
+    res = stateless_module(pyparams, pyargs...; kwargs...)
+    paramslen = length(pyparams)
+    function vjp_func(Δ)
+        # compute the grad of both params and args? will it cost more during training?
+        grad = paddle.fluid.dygraph.grad(res, vcat(stateless_module.NN.parameters(), pyargs...), Δ, retain_graph=true)
         return (grad[1:paramslen], grad[paramslen+1:end])
     end
     return res, vjp_func

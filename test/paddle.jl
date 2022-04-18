@@ -69,3 +69,20 @@ hiddendim = 4
     compare_grad_wrt_params(mlp, mlpwrap, x)
     compare_grad_wrt_inputs(mlp, mlpwrap, x)
 end
+
+@testset "General Net" begin
+    NN = paddle.nn.Linear(indim, outdim)
+    
+    NNwrap = PaddleModuleWrapper(NN)
+    if CUDA.functional()
+        NNwrap = fmap(CUDA.cu, NNwrap)
+    end    
+    x = randn(Float32, indim, batchsize)
+    if CUDA.functional()
+        x = CUDA.cu(x)
+    end
+    y = NNwrap(x)
+    @test size(y) == (outdim, batchsize)
+    compare_grad_wrt_params(NN, NNwrap, x)
+    compare_grad_wrt_inputs(NN, NNwrap, x)
+end
