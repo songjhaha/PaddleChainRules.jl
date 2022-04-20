@@ -71,5 +71,47 @@ function PaddleLayerForward!(out::PyObject, params::Vector, state::Int, L::Paddl
 end
 
 
+function PaddleFCNet(dim_ins, dim_outs, num_layers, hidden_size; dtype="float32", activation="sigmoid")
+    act = PyNULL()
+    if activation == "sigmoid"
+        copy!(act, paddle.nn.Sigmoid())
+    elseif activation == "tanh"
+        copy!(act, paddle.nn.Tanh())
+    elseif activation == "relu"
+        copy!(act, paddle.nn.Relu())
+    else
+        throw(error("Unsupported activation type"))
+    end
+    
+    if !(dtype in ["float16", "float32", "float64"])
+        throw(error("Unsupported data type, use \"float16\", \"float32\" or \"float64\""))
+    end
+
+    pyparams = PyObject[]
+    layers = PaddleStatelessLayer[]
+    lsize, rsize = 0, 0
+    for i in 1:num_layers
+        if i == 1
+            lsize = dim_ins
+            rsize = hidden_size
+        elseif i == num_layers
+            lsize = hidden_size
+            rsize = dim_outs
+        else
+            lsize = hidden_size
+            rsize = hidden_size
+        end
+        push!(pyparams, paddle.static.create_parameter(shape=PyVector([lsize, rsize]), dtype=dtype))
+        push!(pyparams, paddle.static.create_parameter(shape=PyVector([rsize]), dtype=dtype))
+        push!(layers, PaddleLinear(lsize, rsize))
+        if i != num_layers
+            push!(layers, PaddleActivation(act))
+        end
+    end
+    jlparams = map(x->DLPack.wrap(x, pyto_dlpack), pyparams)
+    dtype = eltype(jlparams[1])
+    paddel_fc_net = PaddleStatelessFCNet(layers)
+    return PaddleModuleWrapper(paddel_fc_net, dtype, jlparams)
+end
 
 

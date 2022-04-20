@@ -1,4 +1,4 @@
-using PaddleChainRules.Paddle: PaddleModuleWrapper, paddle, to_paddle_tensor, dlpack, pyto_dlpack, pyfrom_dlpack, ispysetup
+using PaddleChainRules.Paddle: PaddleModuleWrapper, PaddleFCNet, paddle, to_paddle_tensor, dlpack, pyto_dlpack, pyfrom_dlpack, ispysetup
 
 using Test
 using Zygote
@@ -85,4 +85,32 @@ end
     @test size(y) == (outdim, batchsize)
     compare_grad_wrt_params(NN, NNwrap, x)
     compare_grad_wrt_inputs(NN, NNwrap, x)
+end
+
+@testset "FC Net" begin
+    NN = paddle.nn.Sequential(
+        paddle.nn.Linear(indim, hiddendim),
+        paddle.nn.Sigmoid(),
+        paddle.nn.Linear(hiddendim, outdim)
+    )
+
+    NNwrap = PaddleFCNet(indim, outdim, 2, hiddendim; dtype="float32", activation="sigmoid")
+
+    # set same parameters
+    pyparams = NN.parameters()
+    jlparams = map(x->DLPack.wrap(x, pyto_dlpack), pyparams)
+    map((p1,p2)->copy!(p1, p2), NNwrap.params, jlparams)
+
+    if CUDA.functional()
+        NNwrap = fmap(CUDA.cu, NNwrap)
+    end    
+    x = randn(Float32, indim, batchsize)
+    if CUDA.functional()
+        x = CUDA.cu(x)
+    end
+    y = NNwrap(x)
+    @test size(y) == (outdim, batchsize)
+    compare_grad_wrt_params(NN, NNwrap, x)
+    compare_grad_wrt_inputs(NN, NNwrap, x)
+
 end
