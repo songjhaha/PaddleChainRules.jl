@@ -114,3 +114,12 @@ end
     compare_grad_wrt_inputs(NN, NNwrap, x)
 
 end
+
+@testset "Error throw" begin
+    NN = paddle.nn.Sequential(
+        paddle.nn.Conv2D(1,2,5)
+    )
+    @test_throws ErrorException("Unsupported layer type") PaddleModuleWrapper(NN)
+    @test_throws ErrorException("Unsupported activation type") PaddleFCNet(indim, outdim, 2, hiddendim; dtype="float32", activation="celu")
+    @test_throws ErrorException("Unsupported data type, use \"float16\", \"float32\" or \"float64\"") PaddleFCNet(indim, outdim, 2, hiddendim; dtype="int8", activation="sigmoid")
+end

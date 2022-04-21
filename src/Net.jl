@@ -1,6 +1,7 @@
 abstract type PaddleStatelessModule end
 abstract type PaddleStatelessLayer end
 
+
 struct PaddleStatelessGeneralNet<:PaddleStatelessModule
     NN::PyObject
 end
@@ -31,8 +32,10 @@ function PaddleStatelessModule(paddle_module)
         for layer in paddle_module
             if pybuiltin("isinstance")(layer, paddle.nn.Linear)
                 push!(layers, PaddleLinear(layer.weight.shape...))
-            else 
+            elseif pybuiltin("isinstance")(layer, (paddle.nn.Sigmoid, paddle.nn.ReLU, paddle.nn.Tanh))
                 push!(layers, PaddleActivation(layer))
+            else
+                throw(error("Unsupported layer type"))
             end
         end
         paddel_fc_net = PaddleStatelessFCNet(layers)
@@ -78,7 +81,7 @@ function PaddleFCNet(dim_ins, dim_outs, num_layers, hidden_size; dtype="float32"
     elseif activation == "tanh"
         copy!(act, paddle.nn.Tanh())
     elseif activation == "relu"
-        copy!(act, paddle.nn.Relu())
+        copy!(act, paddle.nn.ReLU())
     else
         throw(error("Unsupported activation type"))
     end
