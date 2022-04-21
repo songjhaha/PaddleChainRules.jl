@@ -1,7 +1,7 @@
 abstract type PaddleStatelessModule end
 abstract type PaddleStatelessLayer end
 
-
+# a rough solution for General Net
 struct PaddleStatelessGeneralNet<:PaddleStatelessModule
     NN::PyObject
 end
@@ -73,7 +73,7 @@ function PaddleLayerForward!(out::PyObject, params::Vector, state::Int, L::Paddl
     return state
 end
 
-
+# easy constructor for full connected network
 function PaddleFCNet(dim_ins, dim_outs, num_layers, hidden_size; dtype="float32", activation="sigmoid")
     act = PyNULL()
     if activation == "sigmoid"

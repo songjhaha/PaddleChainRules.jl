@@ -16,9 +16,7 @@ const ispysetup = Ref{Bool}(false)
 pyto_dlpack(x) = @pycall dlpack.to_dlpack(x)::PyObject
 pyfrom_dlpack(x) = @pycall dlpack.from_dlpack(x)::PyObject
 
-# now only support full connected network
 include("Net.jl") 
-
 
 struct PaddleModuleWrapper
     NN::PaddleStatelessModule
@@ -47,7 +45,7 @@ function (wrap::PaddleModuleWrapper)(args...; kwargs...)
     return res
 end
 
-function vjp(stateless_module::PaddleStatelessModule, pyparams::Vector, pyargs...; kwargs...) # grad wrt params and args
+function vjp(stateless_module::PaddleStatelessFCNet, pyparams::Vector, pyargs...; kwargs...) # grad wrt params and args
     res = stateless_module(pyparams, pyargs...; kwargs...)
     paramslen = length(pyparams)
     function vjp_func(Δ)
@@ -69,15 +67,16 @@ function vjp(stateless_module::PaddleStatelessGeneralNet, pyparams::Vector, pyar
     return res, vjp_func
 end
 
-function vjp_wrt_params(stateless_module::PaddleStatelessModule, pyparams::Vector, pyargs...; kwargs...) # grad wrt params
-    res = stateless_module(pyparams, pyargs...; kwargs...)
-    function vjp_func(Δ)
-        # compute the grad of params
-        grad = paddle.fluid.dygraph.grad(res, pyparams, Δ, retain_graph=true)
-        return grad
-    end
-    return res, vjp_func
-end
+## grad wrt params only
+# function vjp_wrt_params(stateless_module::PaddleStatelessModule, pyparams::Vector, pyargs...; kwargs...)
+#     res = stateless_module(pyparams, pyargs...; kwargs...)
+#     function vjp_func(Δ)
+#         # compute the grad of params
+#         grad = paddle.fluid.dygraph.grad(res, pyparams, Δ, retain_graph=true)
+#         return grad
+#     end
+#     return res, vjp_func
+# end
 
 function to_paddle_tensor(x::AbstractArray, stop_grad::Bool)
     out = DLPack.share(x, PyObject, pyfrom_dlpack)
@@ -90,18 +89,14 @@ function ChainRulesCore.rrule(wrap::PaddleModuleWrapper, args...; kwargs...)
     pyparams = fmap(x -> to_paddle_tensor(x,false), wrap.params)
     pyargs = fmap(x -> to_paddle_tensor(x,false), args)
     paddle_primal, vjp_func = vjp(wrap.NN, pyparams, pyargs...; kwargs...)
-    # paddle_primal, vjp_func = vjp_wrt_params(wrap.NN, pyparams, pyargs...; kwargs...)
     project = ProjectTo(args)
     function pullback(Δ)
         cΔ = fmap(x->Adapt.adapt(PyAdaptor{T}(), x), Δ)
         pycΔ = fmap(x->DLPack.share(x, PyObject, pyfrom_dlpack), cΔ)
         paddle_tangent_vals = vjp_func(pycΔ)
         jlparams_tangents = map(x -> DLPack.wrap(x, pyto_dlpack), paddle_tangent_vals[1])
-        # jlparams_tangents = fmap(x -> DLPack.wrap(x, pyto_dlpack), paddle_tangent_vals)
         args_tangents = project(fmap(x -> DLPack.wrap(x, pyto_dlpack), paddle_tangent_vals[2]))
         return (Tangent{PaddleModuleWrapper}(; NN = NoTangent(), dtype = NoTangent(), params = jlparams_tangents), args_tangents...)
-        # return (Tangent{PaddleModuleWrapper}(; NN = NoTangent(), dtype = NoTangent(), params = jlparams_tangents), nothing)
-
     end
     res = fmap(x->DLPack.wrap(x, pyto_dlpack), paddle_primal)
     return res, pullback
@@ -118,8 +113,7 @@ function __init__()
                  Please make sure these are installed. 
         """
         @debug err
-        ispysetup[] = false
-        #rethrow(err)        
+        ispysetup[] = false  
     end
 end
 
