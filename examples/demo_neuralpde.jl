@@ -1,4 +1,4 @@
-using PaddleChainRules.Paddle: paddle, PaddleModuleWrapper
+using PaddleChainRules.Paddle: paddle, PaddleModuleWrapper, PaddleFCNet
 
 using NeuralPDE, Flux, ModelingToolkit, GalacticOptim, DiffEqFlux
 using Quadrature, Cubature, Optimisers
@@ -46,15 +46,21 @@ paddleNN = paddle.nn.Sequential(
 
 paddlewrap = PaddleModuleWrapper(paddleNN)
 
-chain = paddlewrap
-initθ, _ = Optimisers.destructure(chain)
-discretization = PhysicsInformedNN(chain, QuadratureTraining(),init_params =initθ)
+# or use a constructor for full connected network
+paddlewrap = PaddleFCNet(2, 1, 3, 16;dtype="float64", activation="sigmoid")
+
+initθ, _ = Optimisers.destructure(paddlewrap)
+discretization = PhysicsInformedNN(paddlewrap, StochasticTraining(100;bcs_points = 40), init_params =initθ)
+## or other training strategy
+# discretization = PhysicsInformedNN(paddlewrap, GridTraining(dx), init_params =initθ)
+## QuadratureTraining() works very slow here. 
+# discretization = PhysicsInformedNN(paddlewrap, QuadratureTraining(), init_params =initθ)
 prob = discretize(pde_system,discretization)
 
 # solve system
-res = GalacticOptim.solve(prob, DiffEqFlux.ADAM(0.1); cb = cb, maxiters=2000)
-prob = remake(prob,u0=res.minimizer)
-res = GalacticOptim.solve(prob, DiffEqFlux.ADAM(0.01); cb = cb, maxiters=500)
+res = GalacticOptim.solve(prob, DiffEqFlux.ADAM(0.1); cb = cb, maxiters=4000)
+prob = remake(prob, u0=res.minimizer)
+res = GalacticOptim.solve(prob, DiffEqFlux.ADAM(0.01); cb = cb, maxiters=2000)
 phi = discretization.phi
 
 
