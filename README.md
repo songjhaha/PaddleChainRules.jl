@@ -93,7 +93,7 @@ grad, = Zygote.gradient(x->loss(jlwrap, x, target), input)
 And there is a [demo](examples/demo_neuralpde.jl) for neuralPDE.
 
 ## TODO
-- In the demo of neuralPDE, this package is much slower than [PyCallChainRules.jl](https://github.com/rejuvyesh/PyCallChainRules.jl) and Flux.jl, need to imporve the speed.
+- In the demo of neuralPDE, this package is much slower than Flux.jl, need to imporve the speed.
 - Now only the Dense network is supported, more genneral network structure?(rough solution in https://github.com/songjhaha/PaddleChainRules.jl/pull/2)
 - test code. compare output of forwrad and backward to the result from paddle's api.(done)
 - Some benchmarks:
