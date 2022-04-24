@@ -299,9 +299,9 @@ grad, = Zygote.gradient(x->loss(jlwrap, x, target), input)
 2. 在NeuralPDE的例子中，测试了[DiffEqFlux](https://github.com/SciML/DiffEqFlux.jl)，[PyCallChainRules.jl](https://github.com/rejuvyesh/PyCallChainRules.jl) 和该包的实现，在求解2d的泊松方程时的效率差异。实验固定了泊松方程的参数，神经网络的结构，训练时的采样算法和迭代的次数。神经网络固定为三层的全连接神经网络，设定不同的`hidden layer`的大小。实验的结果如下表：
 
    | hiddendims | numbers of params | DiffEqFlux | Torch in PyCallChainRules | PaddleChianRules |
-| :--------: | :---------------: | :--------: | :-----------------------: | :--------------: |
+   | :--------: | :---------------: | :--------: | :-----------------------: | :--------------: |
    |     8      |        105        | 43.039 ms  |        290.360 ms         |    309.928 ms    |
-|     16     |        337        | 55.741 ms  |        310.712 ms         |    318.576 ms    |
+   |     16     |        337        | 55.741 ms  |        310.712 ms         |    318.576 ms    |
    |     32     |       1185        | 80.820 ms  |        311.391 ms         |    336.273 ms    |
 
    实验的代码可以在colab上查看：[Benchmark of NeuralPDE](https://colab.research.google.com/drive/1gK5dZ1k6zrH-KIQn-wJ1gfwenIxhxn32?usp=sharing)
