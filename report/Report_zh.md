@@ -47,7 +47,7 @@ jlwrap = PaddleModuleWrapper(NN)
 jlwrap = PaddleFCNet(dim_ins, dim_outs, num_layers, hidden_size; activation="sigmoid")
 ```
 
-对于一般的神经网络，也支持直接地封装，但存在一定的[问题]()
+对于一般的神经网络，也支持直接地封装，但存在一定的问题，详见实现方法。
 
 ### 求导
 
@@ -113,7 +113,7 @@ grad, = Zygote.gradient(x->loss(jlwrap, x, target), input)
 
 ### NeuralPDE
 
-基本只需要修改两处代码，一个是把神经网络修改成PaddleModuleWrapper，另一处是使用`Optimisers.destructure()`得到Flatten的神经网络的参数。具体代码见[example](examples/demo_neuralpde.jl)。
+基本只需要修改两处代码，一个是把神经网络修改成PaddleModuleWrapper，另一处是使用`Optimisers.destructure()`得到Flatten的神经网络的参数。具体代码见[example](../examples/demo_neuralpde.jl)。
 
 
 
